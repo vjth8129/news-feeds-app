@@ -59,6 +59,12 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="audio/[id]"
+        options={{
+          href: null, // Hide from tab bar
+        }}
+      />
     </Tabs>
   );
 }

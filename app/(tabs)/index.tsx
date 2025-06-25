@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Image,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { ChevronRight, Bell } from 'lucide-react-native';
 
 const BRIEFING_ITEMS = [
@@ -69,9 +70,18 @@ const FILTER_TABS = ['All', 'Technology', 'Business', 'Science'];
 
 export default function HomeScreen() {
   const [selectedFilter, setSelectedFilter] = React.useState('All');
+  const router = useRouter();
+
+  const handleItemPress = (itemId: string) => {
+    router.push(`/(tabs)/audio/${itemId}`);
+  };
 
   const renderBriefingItem = (item: typeof BRIEFING_ITEMS[0]) => (
-    <TouchableOpacity key={item.id} style={styles.briefingItem}>
+    <TouchableOpacity 
+      key={item.id} 
+      style={styles.briefingItem}
+      onPress={() => handleItemPress(item.id)}
+    >
       <View style={[styles.briefingIcon, { backgroundColor: item.bgColor }]}>
         <Text style={styles.briefingEmoji}>{item.icon}</Text>
       </View>
@@ -84,7 +94,11 @@ export default function HomeScreen() {
   );
 
   const renderNewsCategory = (item: typeof NEWS_CATEGORIES[0]) => (
-    <TouchableOpacity key={item.id} style={styles.categoryItem}>
+    <TouchableOpacity 
+      key={item.id} 
+      style={styles.categoryItem}
+      onPress={() => handleItemPress(item.id)}
+    >
       <View style={[styles.categoryIcon, { backgroundColor: item.bgColor }]}>
         <Text style={styles.categoryEmoji}>{item.icon}</Text>
       </View>
