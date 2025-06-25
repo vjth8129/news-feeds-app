@@ -26,7 +26,7 @@ import Animated, {
   withRepeat,
   withSequence,
 } from 'react-native-reanimated';
-import { Slider } from '@react-native-community/slider';
+import Slider from '@react-native-community/slider';
 
 const { width } = Dimensions.get('window');
 
