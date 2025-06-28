@@ -10,16 +10,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/stores/authStore';
-import { 
-  User, 
-  Settings, 
-  Bell, 
-  Download, 
-  Heart, 
-  HelpCircle, 
-  LogOut,
-  ChevronRight 
-} from 'lucide-react-native';
+import { User, Settings, Bell, Download, Heart, CircleHelp as HelpCircle, LogOut, ChevronRight } from 'lucide-react-native';
 
 const PROFILE_MENU_ITEMS = [
   {

@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/stores/authStore';
-import { HelpCircle } from 'lucide-react-native';
+import { CircleHelp as HelpCircle } from 'lucide-react-native';
 
 // Social login icons as SVG components
 const GoogleIcon = () => (
