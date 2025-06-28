@@ -14,10 +14,8 @@ import {
   Play, 
   Pause, 
   SkipBack, 
-  SkipForward, 
-  Rewind, 
-  FastForward,
-  Volume2 
+  SkipForward,
+  FastForward
 } from 'lucide-react-native';
 import Animated, {
   useSharedValue,
@@ -89,22 +87,16 @@ export default function AudioPlayerScreen() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [volume, setVolume] = useState(50);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
 
   // Get audio data based on ID
   const audioData = AUDIO_DATA[id as keyof typeof AUDIO_DATA] || AUDIO_DATA['daily-brief'];
 
   // Animation values
   const pulseScale = useSharedValue(1);
-  const coverRotation = useSharedValue(0);
 
   // Animated styles
   const pulseStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pulseScale.value }],
-  }));
-
-  const coverStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${coverRotation.value}deg` }],
   }));
 
   // Start/stop animations based on playing state
@@ -113,22 +105,14 @@ export default function AudioPlayerScreen() {
       // Pulse animation for play button
       pulseScale.value = withRepeat(
         withSequence(
-          withTiming(1.1, { duration: 800 }),
+          withTiming(1.05, { duration: 800 }),
           withTiming(1, { duration: 800 })
         ),
         -1,
         true
       );
-      
-      // Slow rotation for cover image
-      coverRotation.value = withRepeat(
-        withTiming(360, { duration: 20000 }),
-        -1,
-        false
-      );
     } else {
       pulseScale.value = withTiming(1, { duration: 300 });
-      coverRotation.value = withTiming(coverRotation.value, { duration: 300 });
     }
   }, [isPlaying]);
 
@@ -171,13 +155,6 @@ export default function AudioPlayerScreen() {
     setCurrentTime(Math.min(audioData.duration, currentTime + 15));
   };
 
-  const handleSpeedChange = () => {
-    const speeds = [1.0, 1.25, 1.5, 2.0];
-    const currentIndex = speeds.indexOf(playbackSpeed);
-    const nextIndex = (currentIndex + 1) % speeds.length;
-    setPlaybackSpeed(speeds[nextIndex]);
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -193,12 +170,10 @@ export default function AudioPlayerScreen() {
       {/* Cover Art */}
       <View style={styles.coverContainer}>
         <View style={styles.coverFrame}>
-          <Animated.View style={[styles.coverImageContainer, coverStyle]}>
-            <Image 
-              source={{ uri: audioData.coverImage }}
-              style={styles.coverImage}
-            />
-          </Animated.View>
+          <Image 
+            source={{ uri: audioData.coverImage }}
+            style={styles.coverImage}
+          />
         </View>
       </View>
 
@@ -208,38 +183,20 @@ export default function AudioPlayerScreen() {
         <Text style={styles.trackSource}>{audioData.source}</Text>
       </View>
 
-      {/* Progress Bar */}
-      <View style={styles.progressContainer}>
-        <Slider
-          style={styles.progressSlider}
-          minimumValue={0}
-          maximumValue={audioData.duration}
-          value={currentTime}
-          onValueChange={handleSeek}
-          minimumTrackTintColor="#4285f4"
-          maximumTrackTintColor="#3a3f4e"
-          thumbStyle={styles.sliderThumb}
-        />
-        <View style={styles.timeContainer}>
-          <Text style={styles.timeText}>{formatTime(currentTime)}</Text>
-          <Text style={styles.timeText}>{formatTime(audioData.duration)}</Text>
-        </View>
-      </View>
-
       {/* Controls */}
       <View style={styles.controlsContainer}>
         <TouchableOpacity 
           style={styles.controlButton}
           onPress={handleSkipBack}
         >
-          <Rewind color="#FFFFFF" size={28} />
+          <SkipBack color="#6366f1" size={32} />
         </TouchableOpacity>
 
         <TouchableOpacity 
           style={styles.controlButton}
           onPress={() => setCurrentTime(Math.max(0, currentTime - 10))}
         >
-          <SkipBack color="#FFFFFF" size={32} />
+          <SkipBack color="#6366f1" size={28} />
         </TouchableOpacity>
 
         <Animated.View style={pulseStyle}>
@@ -259,31 +216,33 @@ export default function AudioPlayerScreen() {
           style={styles.controlButton}
           onPress={() => setCurrentTime(Math.min(audioData.duration, currentTime + 10))}
         >
-          <SkipForward color="#FFFFFF" size={32} />
+          <SkipForward color="#6366f1" size={28} />
         </TouchableOpacity>
 
         <TouchableOpacity 
           style={styles.controlButton}
           onPress={handleSkipForward}
         >
-          <FastForward color="#FFFFFF" size={28} />
+          <FastForward color="#6366f1" size={32} />
         </TouchableOpacity>
       </View>
 
       {/* Volume Control */}
       <View style={styles.volumeContainer}>
-        <Volume2 color="#8E8E93" size={20} />
+        <Text style={styles.volumeLabel}>Volume</Text>
+        <Text style={styles.volumeValue}>{volume}</Text>
+      </View>
+      <View style={styles.volumeSliderContainer}>
         <Slider
           style={styles.volumeSlider}
           minimumValue={0}
           maximumValue={100}
           value={volume}
           onValueChange={setVolume}
-          minimumTrackTintColor="#4285f4"
+          minimumTrackTintColor="#6366f1"
           maximumTrackTintColor="#3a3f4e"
           thumbStyle={styles.volumeThumb}
         />
-        <Text style={styles.volumeText}>{volume}</Text>
       </View>
 
       {/* Bottom Actions */}
@@ -292,13 +251,8 @@ export default function AudioPlayerScreen() {
           <Text style={styles.actionButtonText}>Save</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.actionButton}
-          onPress={handleSpeedChange}
-        >
-          <Text style={styles.actionButtonText}>
-            Playback Speed {playbackSpeed}x
-          </Text>
+        <TouchableOpacity style={styles.actionButton}>
+          <Text style={styles.actionButtonText}>Playback Speed</Text>
         </TouchableOpacity>
       </View>
 
@@ -333,8 +287,8 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   coverFrame: {
-    width: width * 0.7,
-    height: width * 0.7,
+    width: width * 0.6,
+    height: width * 0.8,
     backgroundColor: '#f5f5f5',
     borderRadius: 20,
     padding: 20,
@@ -349,20 +303,15 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 10,
   },
-  coverImageContainer: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
   coverImage: {
     width: '100%',
     height: '100%',
+    borderRadius: 12,
     resizeMode: 'cover',
   },
   trackInfo: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 60,
   },
   trackTitle: {
     fontSize: 24,
@@ -377,40 +326,16 @@ const styles = StyleSheet.create({
     color: '#8E8E93',
     textAlign: 'center',
   },
-  progressContainer: {
-    marginBottom: 40,
-  },
-  progressSlider: {
-    width: '100%',
-    height: 40,
-  },
-  sliderThumb: {
-    backgroundColor: '#4285f4',
-    width: 20,
-    height: 20,
-  },
-  timeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 5,
-  },
-  timeText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: '#8E8E93',
-  },
   controlsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 40,
+    marginBottom: 60,
     gap: 20,
   },
   controlButton: {
     width: 50,
     height: 50,
-    borderRadius: 25,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -418,10 +343,10 @@ const styles = StyleSheet.create({
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: '#4285f4',
+    backgroundColor: '#6366f1',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#4285f4',
+    shadowColor: '#6366f1',
     shadowOffset: {
       width: 0,
       height: 5,
@@ -432,25 +357,31 @@ const styles = StyleSheet.create({
   },
   volumeContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 30,
-    gap: 15,
+    marginBottom: 10,
+  },
+  volumeLabel: {
+    fontSize: 16,
+    fontFamily: 'Inter-Medium',
+    color: '#FFFFFF',
+  },
+  volumeValue: {
+    fontSize: 16,
+    fontFamily: 'Inter-Medium',
+    color: '#FFFFFF',
+  },
+  volumeSliderContainer: {
+    marginBottom: 40,
   },
   volumeSlider: {
-    flex: 1,
+    width: '100%',
     height: 40,
   },
   volumeThumb: {
-    backgroundColor: '#4285f4',
-    width: 16,
-    height: 16,
-  },
-  volumeText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
-    color: '#FFFFFF',
-    minWidth: 30,
-    textAlign: 'right',
+    backgroundColor: '#6366f1',
+    width: 20,
+    height: 20,
   },
   bottomActions: {
     flexDirection: 'row',
@@ -471,7 +402,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   detailsButton: {
-    backgroundColor: '#4285f4',
+    backgroundColor: '#6366f1',
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
