@@ -269,14 +269,12 @@ export default function AudioPlayerScreen() {
             <Text style={styles.actionButtonText}>Playback Speed</Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
 
-      {/* Fixed Episode Details Button at Bottom */}
-      <View style={styles.fixedBottomContainer}>
+        {/* Episode Details Button - Now scrollable */}
         <TouchableOpacity style={styles.detailsButton} onPress={handleEpisodeDetails}>
           <Text style={styles.detailsButtonText}>Episode Details</Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -303,7 +301,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 100, // Extra padding to ensure content doesn't get hidden behind fixed button
+    paddingBottom: 40, // Reduced padding since button is now scrollable
   },
   coverContainer: {
     alignItems: 'center',
@@ -432,23 +430,13 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Medium',
     color: '#FFFFFF',
   },
-  fixedBottomContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#1a1d29',
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#2a2f3e',
-  },
   detailsButton: {
     backgroundColor: '#6366f1',
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
+    marginHorizontal: 20,
+    marginBottom: 20,
   },
   detailsButtonText: {
     fontSize: 16,
