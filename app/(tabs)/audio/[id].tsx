@@ -157,7 +157,7 @@ export default function AudioPlayerScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
+      {/* Header with proper margin */}
       <View style={styles.header}>
         <TouchableOpacity 
           style={styles.backButton}
@@ -245,7 +245,7 @@ export default function AudioPlayerScreen() {
         />
       </View>
 
-      {/* Bottom Actions */}
+      {/* Bottom Actions - Save and Playback Speed */}
       <View style={styles.bottomActions}>
         <TouchableOpacity style={styles.actionButton}>
           <Text style={styles.actionButtonText}>Save</Text>
@@ -268,11 +268,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1a1d29',
-    paddingHorizontal: 20,
   },
   header: {
     paddingTop: 20,
     paddingBottom: 20,
+    paddingHorizontal: 20, // Added proper horizontal padding
   },
   backButton: {
     width: 40,
@@ -285,6 +285,7 @@ const styles = StyleSheet.create({
   coverContainer: {
     alignItems: 'center',
     marginBottom: 40,
+    paddingHorizontal: 20,
   },
   coverFrame: {
     width: width * 0.6,
@@ -312,6 +313,7 @@ const styles = StyleSheet.create({
   trackInfo: {
     alignItems: 'center',
     marginBottom: 60,
+    paddingHorizontal: 20,
   },
   trackTitle: {
     fontSize: 24,
@@ -332,6 +334,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 60,
     gap: 20,
+    paddingHorizontal: 20,
   },
   controlButton: {
     width: 50,
@@ -360,6 +363,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
+    paddingHorizontal: 20,
   },
   volumeLabel: {
     fontSize: 16,
@@ -373,6 +377,7 @@ const styles = StyleSheet.create({
   },
   volumeSliderContainer: {
     marginBottom: 40,
+    paddingHorizontal: 20,
   },
   volumeSlider: {
     width: '100%',
@@ -387,6 +392,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 20,
+    paddingHorizontal: 20,
   },
   actionButton: {
     backgroundColor: '#2a2f3e',
@@ -407,6 +413,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
     marginBottom: 20,
+    marginHorizontal: 20,
   },
   detailsButtonText: {
     fontSize: 16,
