@@ -8,48 +8,97 @@ import {
   TouchableOpacity,
   TextInput,
 } from 'react-native';
-import { Search, TrendingUp, Globe, MapPin } from 'lucide-react-native';
-
-const TRENDING_TOPICS = [
-  'Artificial Intelligence',
-  'Climate Change',
-  'Space Exploration',
-  'Cryptocurrency',
-  'Healthcare',
-  'Electric Vehicles',
-];
+import { Search, User } from 'lucide-react-native';
 
 const EXPLORE_CATEGORIES = [
   {
-    id: 'trending',
-    title: 'Trending Now',
-    subtitle: 'Hot topics today',
-    icon: TrendingUp,
-    color: '#ff6b35',
+    id: 'true-crime',
+    title: 'True Crime',
+    icon: '🔍',
+    bgColor: '#8b7355',
   },
   {
-    id: 'global',
-    title: 'Global News',
-    subtitle: 'World updates',
-    icon: Globe,
-    color: '#4285f4',
+    id: 'comedy',
+    title: 'Comedy',
+    icon: '😄',
+    bgColor: '#d4a574',
   },
   {
-    id: 'local',
-    title: 'Local News',
-    subtitle: 'Your area',
-    icon: MapPin,
-    color: '#34a853',
+    id: 'news',
+    title: 'News',
+    icon: '📰',
+    bgColor: '#5a5a5a',
+  },
+  {
+    id: 'sports',
+    title: 'Sports',
+    icon: '⚽',
+    bgColor: '#d4a574',
+  },
+  {
+    id: 'business',
+    title: 'Business',
+    icon: '💼',
+    bgColor: '#8b7355',
+  },
+  {
+    id: 'technology',
+    title: 'Technology',
+    icon: '💻',
+    bgColor: '#7a8471',
+  },
+  {
+    id: 'health',
+    title: 'Health',
+    icon: '🏥',
+    bgColor: '#7a8471',
+  },
+  {
+    id: 'science',
+    title: 'Science',
+    icon: '🔬',
+    bgColor: '#7a8471',
+  },
+  {
+    id: 'arts',
+    title: 'Arts',
+    icon: '🎨',
+    bgColor: '#8b7355',
+  },
+  {
+    id: 'music',
+    title: 'Music',
+    icon: '🎵',
+    bgColor: '#d4a574',
+  },
+  {
+    id: 'education',
+    title: 'Education',
+    icon: '📚',
+    bgColor: '#7a8471',
+  },
+  {
+    id: 'kids-family',
+    title: 'Kids & Family',
+    icon: '👨‍👩‍👧‍👦',
+    bgColor: '#d4a574',
   },
 ];
 
 export default function ExploreScreen() {
   const [searchQuery, setSearchQuery] = React.useState('');
 
+  const handleCategoryPress = (categoryId: string) => {
+    console.log(`Selected category: ${categoryId}`);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Explore</Text>
+        <TouchableOpacity style={styles.profileButton}>
+          <User color="#FFFFFF" size={24} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -58,39 +107,25 @@ export default function ExploreScreen() {
           <Search color="#8E8E93" size={20} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search news, topics, sources..."
+            placeholder="Find conversations"
             placeholderTextColor="#8E8E93"
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
         </View>
 
-        {/* Explore Categories */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Browse</Text>
+        {/* Categories Grid */}
+        <View style={styles.categoriesGrid}>
           {EXPLORE_CATEGORIES.map((category) => (
-            <TouchableOpacity key={category.id} style={styles.categoryCard}>
-              <View style={[styles.categoryIconContainer, { backgroundColor: category.color }]}>
-                <category.icon color="#FFFFFF" size={24} />
-              </View>
-              <View style={styles.categoryInfo}>
-                <Text style={styles.categoryTitle}>{category.title}</Text>
-                <Text style={styles.categorySubtitle}>{category.subtitle}</Text>
-              </View>
+            <TouchableOpacity
+              key={category.id}
+              style={[styles.categoryCard, { backgroundColor: category.bgColor }]}
+              onPress={() => handleCategoryPress(category.id)}
+            >
+              <Text style={styles.categoryIcon}>{category.icon}</Text>
+              <Text style={styles.categoryTitle}>{category.title}</Text>
             </TouchableOpacity>
           ))}
-        </View>
-
-        {/* Trending Topics */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Trending Topics</Text>
-          <View style={styles.tagsContainer}>
-            {TRENDING_TOPICS.map((topic, index) => (
-              <TouchableOpacity key={index} style={styles.tag}>
-                <Text style={styles.tagText}>{topic}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -103,6 +138,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a1d29',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 10,
@@ -111,6 +149,14 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
+  },
+  profileButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#2a2f3e',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   content: {
     flex: 1,
@@ -136,63 +182,30 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     paddingVertical: 16,
   },
-  section: {
-    marginBottom: 30,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontFamily: 'Inter-SemiBold',
-    color: '#FFFFFF',
-    marginBottom: 16,
+  categoriesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 12,
   },
   categoryCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#2a2f3e',
-    borderRadius: 12,
+    width: '48%',
+    aspectRatio: 1.5,
+    borderRadius: 16,
     padding: 16,
+    justifyContent: 'space-between',
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#3a3f4e',
   },
-  categoryIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-  },
-  categoryInfo: {
-    flex: 1,
+  categoryIcon: {
+    fontSize: 32,
+    alignSelf: 'flex-start',
   },
   categoryTitle: {
     fontSize: 16,
     fontFamily: 'Inter-SemiBold',
     color: '#FFFFFF',
-    marginBottom: 2,
-  },
-  categorySubtitle: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: '#8E8E93',
-  },
-  tagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  tag: {
-    backgroundColor: '#2a2f3e',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: '#3a3f4e',
-  },
-  tagText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
-    color: '#FFFFFF',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 });

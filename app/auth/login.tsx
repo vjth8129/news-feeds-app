@@ -13,6 +13,25 @@ import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/stores/authStore';
 import { HelpCircle } from 'lucide-react-native';
 
+// Social login icons as SVG components
+const GoogleIcon = () => (
+  <View style={styles.socialIcon}>
+    <Text style={styles.socialIconText}>G</Text>
+  </View>
+);
+
+const FacebookIcon = () => (
+  <View style={[styles.socialIcon, { backgroundColor: '#1877F2' }]}>
+    <Text style={[styles.socialIconText, { color: '#FFFFFF' }]}>f</Text>
+  </View>
+);
+
+const AppleIcon = () => (
+  <View style={[styles.socialIcon, { backgroundColor: '#000000' }]}>
+    <Text style={[styles.socialIconText, { color: '#FFFFFF' }]}>🍎</Text>
+  </View>
+);
+
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -97,6 +116,7 @@ export default function LoginScreen() {
             style={styles.socialButton}
             onPress={() => handleSocialLogin('Google')}
           >
+            <GoogleIcon />
             <Text style={styles.socialButtonText}>Google</Text>
           </TouchableOpacity>
 
@@ -104,6 +124,7 @@ export default function LoginScreen() {
             style={styles.socialButton}
             onPress={() => handleSocialLogin('Facebook')}
           >
+            <FacebookIcon />
             <Text style={styles.socialButtonText}>Facebook</Text>
           </TouchableOpacity>
         </View>
@@ -112,6 +133,7 @@ export default function LoginScreen() {
           style={[styles.socialButton, styles.appleButton]}
           onPress={() => handleSocialLogin('Apple')}
         >
+          <AppleIcon />
           <Text style={styles.socialButtonText}>Apple</Text>
         </TouchableOpacity>
 
@@ -205,6 +227,9 @@ const styles = StyleSheet.create({
     flex: 0.48,
     borderWidth: 1,
     borderColor: '#3a3f4e',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
   },
   appleButton: {
     flex: 1,
@@ -214,6 +239,19 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontFamily: 'Inter-Medium',
+  },
+  socialIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  socialIconText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Bold',
+    color: '#000000',
   },
   signupText: {
     textAlign: 'center',
