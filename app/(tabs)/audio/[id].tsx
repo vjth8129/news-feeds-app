@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
   header: {
     paddingTop: 20,
     paddingBottom: 20,
-    paddingHorizontal: 20, // Added proper horizontal padding
+    paddingHorizontal: 20, // Proper horizontal padding for back button
   },
   backButton: {
     width: 40,
