@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Image,
   Dimensions,
+  ScrollView,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { 
@@ -26,7 +27,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Slider from '@react-native-community/slider';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 // Mock audio data based on the briefing/category selected
 const AUDIO_DATA = {
@@ -155,6 +156,14 @@ export default function AudioPlayerScreen() {
     setCurrentTime(Math.min(audioData.duration, currentTime + 15));
   };
 
+  const handleSave = () => {
+    console.log('Episode saved');
+  };
+
+  const handleEpisodeDetails = () => {
+    console.log('Show episode details');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header with proper margin */}
@@ -167,99 +176,107 @@ export default function AudioPlayerScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Cover Art */}
-      <View style={styles.coverContainer}>
-        <View style={styles.coverFrame}>
-          <Image 
-            source={{ uri: audioData.coverImage }}
-            style={styles.coverImage}
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Cover Art */}
+        <View style={styles.coverContainer}>
+          <View style={styles.coverFrame}>
+            <Image 
+              source={{ uri: audioData.coverImage }}
+              style={styles.coverImage}
+            />
+          </View>
+        </View>
+
+        {/* Track Info */}
+        <View style={styles.trackInfo}>
+          <Text style={styles.trackTitle}>{audioData.title}</Text>
+          <Text style={styles.trackSource}>{audioData.source}</Text>
+        </View>
+
+        {/* Controls */}
+        <View style={styles.controlsContainer}>
+          <TouchableOpacity 
+            style={styles.controlButton}
+            onPress={handleSkipBack}
+          >
+            <SkipBack color="#6366f1" size={32} />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.controlButton}
+            onPress={() => setCurrentTime(Math.max(0, currentTime - 10))}
+          >
+            <SkipBack color="#6366f1" size={28} />
+          </TouchableOpacity>
+
+          <Animated.View style={pulseStyle}>
+            <TouchableOpacity 
+              style={styles.playButton}
+              onPress={handlePlayPause}
+            >
+              {isPlaying ? (
+                <Pause color="#FFFFFF" size={36} />
+              ) : (
+                <Play color="#FFFFFF" size={36} />
+              )}
+            </TouchableOpacity>
+          </Animated.View>
+
+          <TouchableOpacity 
+            style={styles.controlButton}
+            onPress={() => setCurrentTime(Math.min(audioData.duration, currentTime + 10))}
+          >
+            <SkipForward color="#6366f1" size={28} />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.controlButton}
+            onPress={handleSkipForward}
+          >
+            <FastForward color="#6366f1" size={32} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Volume Control */}
+        <View style={styles.volumeContainer}>
+          <Text style={styles.volumeLabel}>Volume</Text>
+          <Text style={styles.volumeValue}>{volume}</Text>
+        </View>
+        <View style={styles.volumeSliderContainer}>
+          <Slider
+            style={styles.volumeSlider}
+            minimumValue={0}
+            maximumValue={100}
+            value={volume}
+            onValueChange={setVolume}
+            minimumTrackTintColor="#6366f1"
+            maximumTrackTintColor="#3a3f4e"
+            thumbStyle={styles.volumeThumb}
           />
         </View>
-      </View>
 
-      {/* Track Info */}
-      <View style={styles.trackInfo}>
-        <Text style={styles.trackTitle}>{audioData.title}</Text>
-        <Text style={styles.trackSource}>{audioData.source}</Text>
-      </View>
-
-      {/* Controls */}
-      <View style={styles.controlsContainer}>
-        <TouchableOpacity 
-          style={styles.controlButton}
-          onPress={handleSkipBack}
-        >
-          <SkipBack color="#6366f1" size={32} />
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.controlButton}
-          onPress={() => setCurrentTime(Math.max(0, currentTime - 10))}
-        >
-          <SkipBack color="#6366f1" size={28} />
-        </TouchableOpacity>
-
-        <Animated.View style={pulseStyle}>
-          <TouchableOpacity 
-            style={styles.playButton}
-            onPress={handlePlayPause}
-          >
-            {isPlaying ? (
-              <Pause color="#FFFFFF" size={36} />
-            ) : (
-              <Play color="#FFFFFF" size={36} />
-            )}
+        {/* Bottom Actions - Save and Playback Speed */}
+        <View style={styles.bottomActions}>
+          <TouchableOpacity style={styles.actionButton} onPress={handleSave}>
+            <Text style={styles.actionButtonText}>Save</Text>
           </TouchableOpacity>
-        </Animated.View>
 
-        <TouchableOpacity 
-          style={styles.controlButton}
-          onPress={() => setCurrentTime(Math.min(audioData.duration, currentTime + 10))}
-        >
-          <SkipForward color="#6366f1" size={28} />
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.actionButton}>
+            <Text style={styles.actionButtonText}>Playback Speed</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
 
-        <TouchableOpacity 
-          style={styles.controlButton}
-          onPress={handleSkipForward}
-        >
-          <FastForward color="#6366f1" size={32} />
+      {/* Fixed Episode Details Button at Bottom */}
+      <View style={styles.fixedBottomContainer}>
+        <TouchableOpacity style={styles.detailsButton} onPress={handleEpisodeDetails}>
+          <Text style={styles.detailsButtonText}>Episode Details</Text>
         </TouchableOpacity>
       </View>
-
-      {/* Volume Control */}
-      <View style={styles.volumeContainer}>
-        <Text style={styles.volumeLabel}>Volume</Text>
-        <Text style={styles.volumeValue}>{volume}</Text>
-      </View>
-      <View style={styles.volumeSliderContainer}>
-        <Slider
-          style={styles.volumeSlider}
-          minimumValue={0}
-          maximumValue={100}
-          value={volume}
-          onValueChange={setVolume}
-          minimumTrackTintColor="#6366f1"
-          maximumTrackTintColor="#3a3f4e"
-          thumbStyle={styles.volumeThumb}
-        />
-      </View>
-
-      {/* Bottom Actions - Save and Playback Speed */}
-      <View style={styles.bottomActions}>
-        <TouchableOpacity style={styles.actionButton}>
-          <Text style={styles.actionButtonText}>Save</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.actionButton}>
-          <Text style={styles.actionButtonText}>Playback Speed</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Episode Details Button */}
-      <TouchableOpacity style={styles.detailsButton}>
-        <Text style={styles.detailsButtonText}>Episode Details</Text>
-      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -282,14 +299,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 100, // Extra padding to ensure content doesn't get hidden behind fixed button
+  },
   coverContainer: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 30,
     paddingHorizontal: 20,
   },
   coverFrame: {
-    width: width * 0.6,
-    height: width * 0.8,
+    width: Math.min(width * 0.6, 280),
+    height: Math.min(width * 0.8, 350),
     backgroundColor: '#f5f5f5',
     borderRadius: 20,
     padding: 20,
@@ -312,7 +335,7 @@ const styles = StyleSheet.create({
   },
   trackInfo: {
     alignItems: 'center',
-    marginBottom: 60,
+    marginBottom: 40,
     paddingHorizontal: 20,
   },
   trackTitle: {
@@ -332,8 +355,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 60,
-    gap: 20,
+    marginBottom: 40,
+    gap: 15,
     paddingHorizontal: 20,
   },
   controlButton: {
@@ -376,7 +399,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   volumeSliderContainer: {
-    marginBottom: 40,
+    marginBottom: 30,
     paddingHorizontal: 20,
   },
   volumeSlider: {
@@ -401,19 +424,31 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderWidth: 1,
     borderColor: '#3a3f4e',
+    flex: 0.48,
+    alignItems: 'center',
   },
   actionButtonText: {
     fontSize: 14,
     fontFamily: 'Inter-Medium',
     color: '#FFFFFF',
   },
+  fixedBottomContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#1a1d29',
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#2a2f3e',
+  },
   detailsButton: {
     backgroundColor: '#6366f1',
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
-    marginBottom: 20,
-    marginHorizontal: 20,
   },
   detailsButtonText: {
     fontSize: 16,
