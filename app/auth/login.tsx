@@ -130,7 +130,7 @@ export default function LoginScreen() {
         </View>
 
         <TouchableOpacity 
-          style={[styles.socialButton, styles.appleButton]}
+          style={styles.socialButton}
           onPress={() => handleSocialLogin('Apple')}
         >
           <AppleIcon />
@@ -218,22 +218,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 12,
+    gap: 12,
   },
   socialButton: {
     backgroundColor: '#2a2f3e',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
-    flex: 0.48,
+    flex: 1,
     borderWidth: 1,
     borderColor: '#3a3f4e',
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 8,
-  },
-  appleButton: {
-    flex: 1,
-    marginBottom: 40,
+    marginBottom: 12,
   },
   socialButtonText: {
     color: '#FFFFFF',
@@ -241,15 +239,15 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Medium',
   },
   socialIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
   socialIconText: {
-    fontSize: 14,
+    fontSize: 12,
     fontFamily: 'Inter-Bold',
     color: '#000000',
   },
@@ -258,5 +256,6 @@ const styles = StyleSheet.create({
     color: '#8E8E93',
     fontSize: 14,
     fontFamily: 'Inter-Regular',
+    marginTop: 20,
   },
 });

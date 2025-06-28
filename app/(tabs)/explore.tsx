@@ -8,7 +8,8 @@ import {
   TouchableOpacity,
   TextInput,
 } from 'react-native';
-import { Search, User } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { Search, User, ArrowLeft } from 'lucide-react-native';
 
 const EXPLORE_CATEGORIES = [
   {
@@ -87,16 +88,28 @@ const EXPLORE_CATEGORIES = [
 
 export default function ExploreScreen() {
   const [searchQuery, setSearchQuery] = React.useState('');
+  const router = useRouter();
 
   const handleCategoryPress = (categoryId: string) => {
     console.log(`Selected category: ${categoryId}`);
   };
 
+  const handleProfilePress = () => {
+    router.push('/(tabs)/profile');
+  };
+
+  const handleBackPress = () => {
+    router.back();
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
+          <ArrowLeft color="#FFFFFF" size={24} />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Explore</Text>
-        <TouchableOpacity style={styles.profileButton}>
+        <TouchableOpacity style={styles.profileButton} onPress={handleProfilePress}>
           <User color="#FFFFFF" size={24} />
         </TouchableOpacity>
       </View>
@@ -144,6 +157,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 10,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
     fontSize: 24,

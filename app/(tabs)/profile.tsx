@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/stores/authStore';
-import { User, Settings, Bell, Download, Heart, CircleHelp as HelpCircle, LogOut, ChevronRight } from 'lucide-react-native';
+import { User, Settings, Bell, Download, Heart, CircleHelp as HelpCircle, LogOut, ChevronRight, ArrowLeft } from 'lucide-react-native';
 
 const PROFILE_MENU_ITEMS = [
   {
@@ -49,6 +49,10 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
 
+  const handleBackPress = () => {
+    router.back();
+  };
+
   const handleLogout = () => {
     logout();
     router.replace('/auth/login');
@@ -62,7 +66,11 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
+          <ArrowLeft color="#FFFFFF" size={24} />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Profile</Text>
+        <View style={styles.placeholder} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -127,14 +135,29 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a1d29',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 10,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
     fontSize: 24,
     fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
+  },
+  placeholder: {
+    width: 40,
+    height: 40,
   },
   content: {
     flex: 1,

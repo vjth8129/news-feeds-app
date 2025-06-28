@@ -7,7 +7,8 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
-import { Star, Check, Zap, Shield, Headphones } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { Star, Check, Zap, Shield, Headphones, ArrowLeft } from 'lucide-react-native';
 
 const PREMIUM_FEATURES = [
   {
@@ -54,11 +55,20 @@ const SUBSCRIPTION_PLANS = [
 
 export default function PremiumScreen() {
   const [selectedPlan, setSelectedPlan] = React.useState('yearly');
+  const router = useRouter();
+
+  const handleBackPress = () => {
+    router.back();
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
+          <ArrowLeft color="#FFFFFF" size={24} />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Premium</Text>
+        <View style={styles.placeholder} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -153,14 +163,29 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a1d29',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 10,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
     fontSize: 24,
     fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
+  },
+  placeholder: {
+    width: 40,
+    height: 40,
   },
   content: {
     flex: 1,

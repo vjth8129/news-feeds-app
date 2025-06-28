@@ -9,7 +9,7 @@ import {
   Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ChevronRight, Bell } from 'lucide-react-native';
+import { ChevronRight, Bell, ArrowLeft } from 'lucide-react-native';
 
 const BRIEFING_ITEMS = [
   {
@@ -76,6 +76,10 @@ export default function HomeScreen() {
     router.push(`/(tabs)/audio/${itemId}`);
   };
 
+  const handleBackPress = () => {
+    router.back();
+  };
+
   const renderBriefingItem = (item: typeof BRIEFING_ITEMS[0]) => (
     <TouchableOpacity 
       key={item.id} 
@@ -113,6 +117,9 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
+          <ArrowLeft color="#FFFFFF" size={24} />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>For you</Text>
         <TouchableOpacity style={styles.notificationButton}>
           <Bell color="#8E8E93" size={24} />
@@ -173,6 +180,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 10,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
     fontSize: 24,

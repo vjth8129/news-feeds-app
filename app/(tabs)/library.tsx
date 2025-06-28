@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,104 +6,128 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
+  Image,
 } from 'react-native';
-import { Bookmark as BookmarkIcon, Clock, Download, Settings } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { ArrowLeft, User } from 'lucide-react-native';
 
-const LIBRARY_SECTIONS = [
-  {
-    id: 'bookmarks',
-    title: 'Bookmarked Articles',
-    count: 12,
-    icon: BookmarkIcon,
-    color: '#4285f4',
-  },
-  {
-    id: 'history',
-    title: 'Reading History',
-    count: 48,
-    icon: Clock,
-    color: '#34a853',
-  },
-  {
-    id: 'downloads',
-    title: 'Downloaded Articles',
-    count: 5,
-    icon: Download,
-    color: '#ff6b35',
-  },
-];
+const LIBRARY_TABS = ['Podcasts', 'Downloads', 'Playlists'];
 
-const RECENT_BOOKMARKS = [
+const FOLLOWED_PODCASTS = [
   {
     id: '1',
-    title: 'The Future of Artificial Intelligence in Healthcare',
-    source: 'Tech News',
-    readTime: '5 min read',
-    category: 'Technology',
+    title: 'The New York Times',
+    subtitle: 'The Daily',
+    image: 'https://images.pexels.com/photos/518543/pexels-photo-518543.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
+    bgColor: '#d4a574',
   },
   {
     id: '2',
-    title: 'Climate Change: New Research Reveals Alarming Trends',
-    source: 'Science Daily',
-    readTime: '8 min read',
-    category: 'Environment',
+    title: 'Up First',
+    subtitle: 'NPR',
+    image: 'https://images.pexels.com/photos/1591056/pexels-photo-1591056.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
+    bgColor: '#8b7355',
   },
   {
     id: '3',
-    title: 'Global Markets Show Signs of Recovery',
-    source: 'Business Times',
-    readTime: '3 min read',
-    category: 'Finance',
+    title: 'The Journal.',
+    subtitle: 'The Wall Street Journal',
+    image: 'https://images.pexels.com/photos/159888/pexels-photo-159888.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
+    bgColor: '#7a8471',
+  },
+  {
+    id: '4',
+    title: 'The Ezra Klein Show',
+    subtitle: 'The New York Times',
+    image: 'https://images.pexels.com/photos/325229/pexels-photo-325229.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
+    bgColor: '#5a5a5a',
+  },
+  {
+    id: '5',
+    title: 'Sway',
+    subtitle: 'The New York Times',
+    image: 'https://images.pexels.com/photos/1591447/pexels-photo-1591447.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
+    bgColor: '#d4a574',
+  },
+  {
+    id: '6',
+    title: 'Hard Fork',
+    subtitle: 'The New York Times',
+    image: 'https://images.pexels.com/photos/8348553/pexels-photo-8348553.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
+    bgColor: '#7a8471',
   },
 ];
 
 export default function LibraryScreen() {
+  const [selectedTab, setSelectedTab] = useState('Podcasts');
+  const router = useRouter();
+
+  const handleBackPress = () => {
+    router.back();
+  };
+
+  const handleProfilePress = () => {
+    router.push('/(tabs)/profile');
+  };
+
+  const handlePodcastPress = (podcastId: string) => {
+    console.log(`Selected podcast: ${podcastId}`);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
+          <ArrowLeft color="#FFFFFF" size={24} />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Your Library</Text>
-        <TouchableOpacity style={styles.settingsButton}>
-          <Settings color="#8E8E93" size={24} />
+        <TouchableOpacity style={styles.profileButton} onPress={handleProfilePress}>
+          <User color="#FFFFFF" size={24} />
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Library Sections */}
-        <View style={styles.section}>
-          {LIBRARY_SECTIONS.map((section) => (
-            <TouchableOpacity key={section.id} style={styles.libraryCard}>
-              <View style={[styles.iconContainer, { backgroundColor: section.color }]}>
-                <section.icon color="#FFFFFF" size={24} />
-              </View>
-              <View style={styles.cardContent}>
-                <Text style={styles.cardTitle}>{section.title}</Text>
-                <Text style={styles.cardCount}>{section.count} items</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
+      {/* Tab Navigation */}
+      <View style={styles.tabContainer}>
+        {LIBRARY_TABS.map((tab) => (
+          <TouchableOpacity
+            key={tab}
+            style={[
+              styles.tab,
+              selectedTab === tab && styles.tabActive
+            ]}
+            onPress={() => setSelectedTab(tab)}
+          >
+            <Text style={[
+              styles.tabText,
+              selectedTab === tab && styles.tabTextActive
+            ]}>
+              {tab}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
-        {/* Recent Bookmarks */}
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Followed Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recent Bookmarks</Text>
-          {RECENT_BOOKMARKS.map((article) => (
-            <TouchableOpacity key={article.id} style={styles.articleCard}>
-              <View style={styles.articleContent}>
-                <Text style={styles.articleTitle} numberOfLines={2}>
-                  {article.title}
-                </Text>
-                <View style={styles.articleMeta}>
-                  <Text style={styles.articleSource}>{article.source}</Text>
-                  <Text style={styles.articleDivider}>•</Text>
-                  <Text style={styles.articleReadTime}>{article.readTime}</Text>
-                </View>
-                <View style={styles.categoryBadge}>
-                  <Text style={styles.categoryText}>{article.category}</Text>
-                </View>
+          <Text style={styles.sectionTitle}>Followed</Text>
+          
+          {FOLLOWED_PODCASTS.map((podcast) => (
+            <TouchableOpacity
+              key={podcast.id}
+              style={styles.podcastItem}
+              onPress={() => handlePodcastPress(podcast.id)}
+            >
+              <View style={[styles.podcastImage, { backgroundColor: podcast.bgColor }]}>
+                <Image 
+                  source={{ uri: podcast.image }}
+                  style={styles.podcastImageContent}
+                />
               </View>
-              <TouchableOpacity style={styles.bookmarkButton}>
-                <BookmarkIcon color="#4285f4" size={20} fill="#4285f4" />
-              </TouchableOpacity>
+              <View style={styles.podcastInfo}>
+                <Text style={styles.podcastTitle}>{podcast.title}</Text>
+                <Text style={styles.podcastSubtitle}>{podcast.subtitle}</Text>
+              </View>
             </TouchableOpacity>
           ))}
         </View>
@@ -125,13 +149,49 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 10,
   },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   headerTitle: {
     fontSize: 24,
     fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
   },
-  settingsButton: {
-    padding: 4,
+  profileButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#2a2f3e',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  tab: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginRight: 20,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  tabActive: {
+    borderBottomColor: '#FFFFFF',
+  },
+  tabText: {
+    fontSize: 16,
+    fontFamily: 'Inter-Medium',
+    color: '#8E8E93',
+  },
+  tabTextActive: {
+    color: '#FFFFFF',
   },
   content: {
     flex: 1,
@@ -141,97 +201,42 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontFamily: 'Inter-SemiBold',
+    fontSize: 20,
+    fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
-    marginBottom: 16,
+    marginBottom: 20,
   },
-  libraryCard: {
+  podcastItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2a2f3e',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#3a3f4e',
+    marginBottom: 16,
   },
-  iconContainer: {
-    width: 48,
-    height: 48,
+  podcastImage: {
+    width: 56,
+    height: 56,
     borderRadius: 12,
+    marginRight: 16,
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16,
   },
-  cardContent: {
+  podcastImageContent: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  podcastInfo: {
     flex: 1,
   },
-  cardTitle: {
+  podcastTitle: {
     fontSize: 16,
     fontFamily: 'Inter-SemiBold',
     color: '#FFFFFF',
     marginBottom: 2,
   },
-  cardCount: {
+  podcastSubtitle: {
     fontSize: 14,
     fontFamily: 'Inter-Regular',
     color: '#8E8E93',
-  },
-  articleCard: {
-    flexDirection: 'row',
-    backgroundColor: '#2a2f3e',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#3a3f4e',
-  },
-  articleContent: {
-    flex: 1,
-    marginRight: 12,
-  },
-  articleTitle: {
-    fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
-    color: '#FFFFFF',
-    marginBottom: 8,
-    lineHeight: 22,
-  },
-  articleMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  articleSource: {
-    fontSize: 12,
-    fontFamily: 'Inter-Regular',
-    color: '#8E8E93',
-  },
-  articleDivider: {
-    fontSize: 12,
-    fontFamily: 'Inter-Regular',
-    color: '#8E8E93',
-    marginHorizontal: 6,
-  },
-  articleReadTime: {
-    fontSize: 12,
-    fontFamily: 'Inter-Regular',
-    color: '#8E8E93',
-  },
-  categoryBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#4285f4',
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  categoryText: {
-    fontSize: 11,
-    fontFamily: 'Inter-Medium',
-    color: '#FFFFFF',
-  },
-  bookmarkButton: {
-    padding: 4,
   },
 });
