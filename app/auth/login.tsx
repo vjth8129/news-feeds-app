@@ -67,7 +67,7 @@ export default function LoginScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.logo}>ListenUp</Text>
+        <Text style={styles.logo}>Newsify</Text>
         <TouchableOpacity style={styles.helpButton}>
           <HelpCircle color="#8E8E93" size={24} />
         </TouchableOpacity>
@@ -129,13 +129,13 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity 
+        {/* <TouchableOpacity 
           style={styles.socialButton}
           onPress={() => handleSocialLogin('Apple')}
         >
           <AppleIcon />
           <Text style={styles.socialButtonText}>Apple</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <TouchableOpacity onPress={() => router.push('/auth/signup')}>
           <Text style={styles.signupText}>
