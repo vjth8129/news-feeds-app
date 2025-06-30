@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/stores/authStore';
 import { CircleHelp as HelpCircle } from 'lucide-react-native';
+import * as Google from 'expo-auth-session/providers/google';
 
 // Social login icons as SVG components
 const GoogleIcon = () => (
@@ -32,12 +33,19 @@ const AppleIcon = () => (
   </View>
 );
 
+const SAMPLE_GOOGLE_CLIENT_ID = '616886846838-8lcjiru22ps0u01vph9hpbfbcvilq3nn.apps.googleusercontent.com'; // Sample client ID
+
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { login } = useAuthStore();
+
+  // Google Auth Request
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    clientId: SAMPLE_GOOGLE_CLIENT_ID,
+  });
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -60,8 +68,43 @@ export default function LoginScreen() {
     }
   };
 
+  // Social login handler
   const handleSocialLogin = (provider: string) => {
-    Alert.alert('Coming Soon', `${provider} login will be available soon!`);
+    if (provider === 'Google') {
+      promptAsync();
+    } else if (provider === 'Facebook') {
+      Alert.alert('Coming Soon', 'Facebook login will be available soon!');
+    }
+  };
+
+  // Handle Google login response
+  useEffect(() => {
+    if (
+      response?.type === 'success' &&
+      response.authentication &&
+      response.authentication.accessToken
+    ) {
+      (async () => {
+        try {
+          const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+            headers: { Authorization: `Bearer ${response.authentication!.accessToken}` },
+          });
+          const userInfo = await userInfoResponse.json();
+          mockSocialLogin('Google', userInfo);
+        } catch (error: any) {
+          Alert.alert('Google Login Error', error?.message || 'Unknown error');
+        }
+      })();
+    }
+  }, [response]);
+
+  // Mock social login function
+  const mockSocialLogin = (provider: string, userInfo: any) => {
+    // Here you would call your API. For now, just show an alert with the info.
+    Alert.alert(
+      `${provider} Login Success`,
+      `Name: ${userInfo.name || userInfo.given_name || ''}\nEmail: ${userInfo.email || ''}`
+    );
   };
 
   return (
