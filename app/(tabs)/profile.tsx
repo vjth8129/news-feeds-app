@@ -9,8 +9,9 @@ import {
   Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuthStore } from '@/stores/authStore';
+import { useProfile } from '@/hooks/useProfile';
 import { User, Settings, Bell, Download, Heart, CircleHelp as HelpCircle, LogOut, ChevronRight, ArrowLeft } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const PROFILE_MENU_ITEMS = [
   {
@@ -47,14 +48,15 @@ const PROFILE_MENU_ITEMS = [
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, logout } = useAuthStore();
+  const { profileData, loading, error } = useProfile();
 
   const handleBackPress = () => {
     router.back();
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await AsyncStorage.removeItem('token');
+    await AsyncStorage.removeItem('userId');
     router.replace('/auth/login');
   };
 
@@ -62,6 +64,40 @@ export default function ProfileScreen() {
     // Handle menu item navigation
     console.log(`Pressed ${itemId}`);
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
+            <ArrowLeft color="#FFFFFF" size={24} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Profile</Text>
+          <View style={styles.placeholder} />
+        </View>
+        <View style={styles.content}>
+          <Text style={{ color: '#fff', textAlign: 'center', marginTop: 40 }}>Loading profile...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
+            <ArrowLeft color="#FFFFFF" size={24} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Profile</Text>
+          <View style={styles.placeholder} />
+        </View>
+        <View style={styles.content}>
+          <Text style={{ color: 'red', textAlign: 'center', marginTop: 40 }}>Failed to load profile</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -82,17 +118,17 @@ export default function ProfileScreen() {
             </View>
           </View>
           <Text style={styles.userName}>
-            {user?.firstName} {user?.lastName}
+            {profileData?.user?.firstName} {profileData?.user?.lastName}
           </Text>
-          <Text style={styles.userEmail}>{user?.email}</Text>
+          <Text style={styles.userEmail}>{profileData?.user?.email}</Text>
           
           {/* Interests */}
           <View style={styles.interestsContainer}>
             <Text style={styles.interestsTitle}>Your Interests</Text>
             <View style={styles.interestsTags}>
-              {user?.interests?.map((interest, index) => (
+              {profileData?.categories?.map((category, index) => (
                 <View key={index} style={styles.interestTag}>
-                  <Text style={styles.interestTagText}>{interest}</Text>
+                  <Text style={styles.interestTagText}>{category.name || category.title}</Text>
                 </View>
               ))}
             </View>
