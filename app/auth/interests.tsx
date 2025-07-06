@@ -10,68 +10,16 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/stores/authStore';
-
-const INTEREST_CATEGORIES = [
-  {
-    id: 'technology',
-    title: 'Technology',
-    color: '#1a4c8c',
-    image: 'https://images.pexels.com/photos/325229/pexels-photo-325229.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop',
-  },
-  {
-    id: 'health',
-    title: 'Health',
-    color: '#2d5a3d',
-    image: 'https://images.pexels.com/photos/4173624/pexels-photo-4173624.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop',
-  },
-  {
-    id: 'business',
-    title: 'Business',
-    color: '#8b4513',
-    image: 'https://images.pexels.com/photos/159888/pexels-photo-159888.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop',
-  },
-  {
-    id: 'science',
-    title: 'Science',
-    color: '#1a5f7a',
-    image: 'https://images.pexels.com/photos/8348553/pexels-photo-8348553.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop',
-  },
-  {
-    id: 'environment',
-    title: 'Environment',
-    color: '#2d5016',
-    image: 'https://images.pexels.com/photos/1072824/pexels-photo-1072824.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop',
-  },
-  {
-    id: 'finance',
-    title: 'Finance',
-    color: '#4a5d23',
-    image: 'https://images.pexels.com/photos/128867/coins-currency-investment-insurance-128867.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop',
-  },
-  {
-    id: 'education',
-    title: 'Education',
-    color: '#1e3a8a',
-    image: 'https://images.pexels.com/photos/5212345/pexels-photo-5212345.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop',
-  },
-  {
-    id: 'local-news',
-    title: 'Local News',
-    color: '#d97706',
-    image: 'https://images.pexels.com/photos/1587927/pexels-photo-1587927.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop',
-  },
-  {
-    id: 'politics',
-    title: 'Politics',
-    color: '#374151',
-    image: 'https://images.pexels.com/photos/6615544/pexels-photo-6615544.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop',
-  },
-];
+import { useCategories } from '@/hooks/useCategories';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useUserCategoryPreference } from '@/hooks/useUserCategoryPreference';
 
 export default function InterestsScreen() {
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const router = useRouter();
   const { setInterests } = useAuthStore();
+  const { categories, loading, error } = useCategories();
+  const { savePreferences, loading: saving, error: saveError } = useUserCategoryPreference();
 
   const toggleInterest = (interestId: string) => {
     setSelectedInterests(prev => 
@@ -81,14 +29,47 @@ export default function InterestsScreen() {
     );
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (selectedInterests.length < 3) {
       return;
     }
-    
-    setInterests(selectedInterests);
-    router.replace('/(tabs)');
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        alert('User not found in session. Please sign up again.');
+        return;
+      }
+      // Get the full selected category objects
+      const selectedCategoryObjects = categories.filter((cat: any) => 
+        selectedInterests.includes(cat.id || cat._id)
+      );
+      const result = await savePreferences(userId, selectedCategoryObjects);
+      if (result && 'data' in result && result.data) {
+        setInterests(selectedInterests);
+        router.replace('/(tabs)');
+      } else {
+        alert(result.error || 'Failed to save preferences');
+      }
+    } catch (e) {
+      alert('Something went wrong.');
+    }
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text style={{ color: '#fff', textAlign: 'center', marginTop: 40 }}>Loading categories...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text style={{ color: 'red', textAlign: 'center', marginTop: 40 }}>Failed to load categories</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -97,16 +78,16 @@ export default function InterestsScreen() {
         <TouchableOpacity 
           style={[
             styles.nextButton, 
-            selectedInterests.length < 3 && styles.nextButtonDisabled
+            (selectedInterests.length < 3 || saving) && styles.nextButtonDisabled
           ]}
           onPress={handleNext}
-          disabled={selectedInterests.length < 3}
+          disabled={selectedInterests.length < 3 || saving}
         >
           <Text style={[
             styles.nextButtonText,
-            selectedInterests.length < 3 && styles.nextButtonTextDisabled
+            (selectedInterests.length < 3 || saving) && styles.nextButtonTextDisabled
           ]}>
-            Next
+            {saving ? 'Saving...' : 'Next'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -120,28 +101,25 @@ export default function InterestsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.grid}>
-          {INTEREST_CATEGORIES.map((category) => (
+          {categories.map((category: any) => (
             <TouchableOpacity
-              key={category.id}
+              key={category.id || category._id}
               style={[
                 styles.interestCard,
-                selectedInterests.includes(category.id) && styles.selectedCard
+                selectedInterests.includes(category.id || category._id) && styles.selectedCard
               ]}
-              onPress={() => toggleInterest(category.id)}
+              onPress={() => toggleInterest(category.id || category._id)}
             >
               <Image 
-                source={{ uri: category.image }}
+                source={{ uri: 'https://images.pexels.com/photos/325229/pexels-photo-325229.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop' }}
                 style={styles.cardImage}
               />
               <View 
-                style={[
-                  styles.cardOverlay,
-                  { backgroundColor: category.color + '80' }
-                ]}
+                style={styles.cardOverlay}
               >
-                <Text style={styles.cardTitle}>{category.title}</Text>
+                <Text style={styles.cardTitle}>{category.name || category.title}</Text>
               </View>
-              {selectedInterests.includes(category.id) && (
+              {selectedInterests.includes(category.id || category._id) && (
                 <View style={styles.selectedIndicator}>
                   <Text style={styles.checkmark}>✓</Text>
                 </View>
@@ -150,21 +128,6 @@ export default function InterestsScreen() {
           ))}
         </View>
       </ScrollView>
-
-      <View style={styles.bottomNav}>
-        <View style={styles.navItem}>
-          <View style={styles.navIcon} />
-        </View>
-        <View style={styles.navItem}>
-          <View style={styles.navIcon} />
-        </View>
-        <View style={styles.navItem}>
-          <View style={styles.navIcon} />
-        </View>
-        <View style={styles.navItem}>
-          <View style={styles.navIcon} />
-        </View>
-      </View>
     </SafeAreaView>
   );
 }
@@ -269,22 +232,5 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 12,
     fontFamily: 'Inter-Bold',
-  },
-  bottomNav: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#2a2f3e',
-  },
-  navItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  navIcon: {
-    width: 24,
-    height: 24,
-    backgroundColor: '#2a2f3e',
-    borderRadius: 12,
   },
 });

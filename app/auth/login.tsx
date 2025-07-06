@@ -10,9 +10,10 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuthStore } from '@/stores/authStore';
+import { useLogin } from '@/hooks/useLogin';
 import { CircleHelp as HelpCircle } from 'lucide-react-native';
 import * as Google from 'expo-auth-session/providers/google';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Social login icons as SVG components
 const GoogleIcon = () => (
@@ -35,12 +36,34 @@ const AppleIcon = () => (
 
 const SAMPLE_GOOGLE_CLIENT_ID = '616886846838-8lcjiru22ps0u01vph9hpbfbcvilq3nn.apps.googleusercontent.com'; // Sample client ID
 
+// Add a type for the decoded token
+interface DecodedToken {
+  userId?: string;
+  [key: string]: any;
+}
+
+function parseJwt(token: string): any {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return {};
+  }
+}
+
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { login } = useAuthStore();
+  const { login } = useLogin();
 
   // Google Auth Request
   const [request, response, promptAsync] = Google.useAuthRequest({
@@ -55,14 +78,20 @@ export default function LoginScreen() {
 
     setIsLoading(true);
     try {
-      const success = await login(email, password);
-      if (success) {
+      const result = await login(email, password);
+      if (result.data && result.data.token) {
+        await AsyncStorage.setItem('token', result.data.token);
+        // Parse token to get userId
+        const decoded: DecodedToken = parseJwt(result.data.token);
+        if (decoded && decoded.userId) {
+          await AsyncStorage.setItem('userId', decoded.userId);
+        }
         router.replace('/(tabs)');
       } else {
-        Alert.alert('Login Failed', 'Invalid email or password');
+        Alert.alert('Login Failed', result.error || 'Invalid email or password');
       }
-    } catch (error) {
-      Alert.alert('Error', 'Something went wrong. Please try again.');
+    } catch (error: any) {
+      Alert.alert('Error', error?.message || 'Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
     }

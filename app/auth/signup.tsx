@@ -10,12 +10,35 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuthStore } from '@/stores/authStore';
+import { useSignup } from '@/hooks/useSignup';
 import { HelpCircle } from 'lucide-react-native';
 import * as AuthSession from 'expo-auth-session';
 import * as Google from 'expo-auth-session/providers/google';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SAMPLE_GOOGLE_CLIENT_ID = '616886846838-8lcjiru22ps0u01vph9hpbfbcvilq3nn.apps.googleusercontent.com'; // Sample client ID
+
+// Add a type for the decoded token
+interface DecodedToken {
+  userId?: string;
+  [key: string]: any;
+}
+
+function parseJwt(token: string): any {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return {};
+  }
+}
 
 export default function SignupScreen() {
   const [email, setEmail] = useState('');
@@ -25,7 +48,7 @@ export default function SignupScreen() {
   const [lastName, setLastName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { signup } = useAuthStore();
+  const { signup } = useSignup();
 
   // Google Auth Request
   const [request, response, promptAsync] = Google.useAuthRequest({
@@ -50,14 +73,20 @@ export default function SignupScreen() {
 
     setIsLoading(true);
     try {
-      const success = await signup({ email, password, firstName, lastName });
-      if (success) {
+      const result = await signup({ email, password, firstName, lastName });
+      if (result.data && result.data.token) {
+        await AsyncStorage.setItem('token', result.data.token);
+        // Parse token to get userId
+        const decoded: DecodedToken = parseJwt(result.data.token);
+        if (decoded && decoded.email) {
+          await AsyncStorage.setItem('userId', decoded.email);
+        }
         router.replace('/auth/interests');
       } else {
-        Alert.alert('Signup Failed', 'Please try again');
+        Alert.alert('Signup Failed', result.error || 'Please try again');
       }
-    } catch (error) {
-      Alert.alert('Error', 'Something went wrong. Please try again.');
+    } catch (error: any) {
+      Alert.alert('Error', error?.message || 'Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -114,6 +143,7 @@ export default function SignupScreen() {
       `Name: ${userInfo.name || userInfo.given_name || ''}\nEmail: ${userInfo.email || ''}`
     );
   };
+
 
   return (
     <SafeAreaView style={styles.container}>
