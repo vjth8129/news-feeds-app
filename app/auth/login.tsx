@@ -11,9 +11,14 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useLogin } from '@/hooks/useLogin';
-import { CircleHelp as HelpCircle } from 'lucide-react-native';
+import { useSocialAuth } from '@/hooks/useSocialAuth';
+import { CircleHelp as HelpCircle, Eye, EyeOff } from 'lucide-react-native';
 import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// For proper Google auth session handling
+WebBrowser.maybeCompleteAuthSession();
 
 // Social login icons as SVG components
 const GoogleIcon = () => (
@@ -28,21 +33,14 @@ const FacebookIcon = () => (
   </View>
 );
 
-const AppleIcon = () => (
-  <View style={[styles.socialIcon, { backgroundColor: '#000000' }]}>
-    <Text style={[styles.socialIconText, { color: '#FFFFFF' }]}>🍎</Text>
-  </View>
-);
+const GOOGLE_CLIENT_ID = '288187643173-clfh5t0df5jvcidtj652aeldmdev7mt8.apps.googleusercontent.com';
+// No client secret for Expo Go/mobile!
+const EXPO_USERNAME = 'vijith-dev';
+const EXPO_APP_SLUG = 'bolt-expo-nativewind';
+const REDIRECT_URI = `https://auth.expo.io/@${EXPO_USERNAME}/${EXPO_APP_SLUG}`;
 
-const SAMPLE_GOOGLE_CLIENT_ID = '616886846838-8lcjiru22ps0u01vph9hpbfbcvilq3nn.apps.googleusercontent.com'; // Sample client ID
-
-// Add a type for the decoded token
-interface DecodedToken {
-  userId?: string;
-  [key: string]: any;
-}
-
-function parseJwt(token: string): any {
+// Helper to decode JWT
+function parseJwt(token: string) {
   try {
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -62,45 +60,58 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const router = useRouter();
   const { login } = useLogin();
+  const { socialAuth } = useSocialAuth();
 
-  // Google Auth Request
+  // Google Auth Request (NO clientSecret)
   const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: SAMPLE_GOOGLE_CLIENT_ID,
+    clientId: GOOGLE_CLIENT_ID,
+    redirectUri: REDIRECT_URI,
+    scopes: ['profile', 'email'],
   });
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
+  // Validation helpers
+  const validateEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
 
+  const validateFields = () => {
+    const newErrors: { [key: string]: string } = {};
+    if (!email) newErrors.email = 'Email is required';
+    else if (!validateEmail(email)) newErrors.email = 'Invalid email address';
+    if (!password) newErrors.password = 'Password is required';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Handle email/password login
+  const handleLogin = async () => {
+    if (!validateFields()) return;
     setIsLoading(true);
     try {
       const result = await login(email, password);
-      if (result.data && result.data.token) {
+      if (result.data?.token) {
         await AsyncStorage.setItem('token', result.data.token);
-        // Parse token to get userId
-        const decoded: DecodedToken = parseJwt(result.data.token);
-        if (decoded && decoded.userId) {
+        const decoded = parseJwt(result.data.token);
+        if (decoded?.userId) {
           await AsyncStorage.setItem('userId', decoded.userId);
         }
         router.replace('/(tabs)');
       } else {
-        Alert.alert('Login Failed', result.error || 'Invalid email or password');
+        setErrors({ form: result.error || 'Invalid email or password' });
       }
     } catch (error: any) {
-      Alert.alert('Error', error?.message || 'Something went wrong. Please try again.');
+      setErrors({ form: error?.message || 'Something went wrong. Please try again.' });
     } finally {
       setIsLoading(false);
     }
   };
 
   // Social login handler
-  const handleSocialLogin = (provider: string) => {
+  const handleSocialLogin = async (provider: string) => {
     if (provider === 'Google') {
-      promptAsync();
+      await promptAsync();
     } else if (provider === 'Facebook') {
       Alert.alert('Coming Soon', 'Facebook login will be available soon!');
     }
@@ -110,31 +121,34 @@ export default function LoginScreen() {
   useEffect(() => {
     if (
       response?.type === 'success' &&
-      response.authentication &&
-      response.authentication.accessToken
+      (response.authentication?.accessToken || response.params?.access_token) &&
+      (response.authentication?.idToken || response.params?.id_token)
     ) {
       (async () => {
         try {
-          const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-            headers: { Authorization: `Bearer ${response.authentication!.accessToken}` },
+          const idToken = response.authentication?.idToken || response.params?.id_token;
+          const accessToken = response.authentication?.accessToken || response.params?.access_token;
+          const result = await socialAuth({
+            provider: 'google',
+            id_token: idToken,
+            accessToken: accessToken,
           });
-          const userInfo = await userInfoResponse.json();
-          mockSocialLogin('Google', userInfo);
+          if (result.data?.token) {
+            await AsyncStorage.setItem('token', result.data.token);
+            const decoded = parseJwt(result.data.token);
+            if (decoded?.userId) {
+              await AsyncStorage.setItem('userId', decoded.userId);
+            }
+            router.replace('/(tabs)');
+          } else {
+            Alert.alert('Google Login Failed', result.error || 'Could not login with Google');
+          }
         } catch (error: any) {
           Alert.alert('Google Login Error', error?.message || 'Unknown error');
         }
       })();
     }
   }, [response]);
-
-  // Mock social login function
-  const mockSocialLogin = (provider: string, userInfo: any) => {
-    // Here you would call your API. For now, just show an alert with the info.
-    Alert.alert(
-      `${provider} Login Success`,
-      `Name: ${userInfo.name || userInfo.given_name || ''}\nEmail: ${userInfo.email || ''}`
-    );
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -154,19 +168,29 @@ export default function LoginScreen() {
             placeholder="Email"
             placeholderTextColor="#8E8E93"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={text => { setEmail(text); if (errors.email) { const { email, ...rest } = errors; setErrors(rest); } }}
             keyboardType="email-address"
             autoCapitalize="none"
           />
+          {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
 
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor="#8E8E93"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+          <View style={{ position: 'relative' }}>
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor="#8E8E93"
+              value={password}
+              onChangeText={text => { setPassword(text); if (errors.password) { const { password, ...rest } = errors; setErrors(rest); } }}
+              secureTextEntry={!showPassword}
+            />
+            <TouchableOpacity
+              style={{ position: 'absolute', right: 16, top: 18 }}
+              onPress={() => setShowPassword(v => !v)}
+            >
+              {showPassword ? <EyeOff size={20} color="#8E8E93" /> : <Eye size={20} color="#8E8E93" />}
+            </TouchableOpacity>
+          </View>
+          {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
 
           <TouchableOpacity 
             style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
@@ -179,6 +203,7 @@ export default function LoginScreen() {
               <Text style={styles.loginButtonText}>Log in</Text>
             )}
           </TouchableOpacity>
+          {errors.form && <Text style={styles.errorText}>{errors.form}</Text>}
         </View>
 
         <Text style={styles.orText}>Or login with</Text>
@@ -187,6 +212,7 @@ export default function LoginScreen() {
           <TouchableOpacity 
             style={styles.socialButton}
             onPress={() => handleSocialLogin('Google')}
+            disabled={!request}
           >
             <GoogleIcon />
             <Text style={styles.socialButtonText}>Google</Text>
@@ -200,14 +226,6 @@ export default function LoginScreen() {
             <Text style={styles.socialButtonText}>Facebook</Text>
           </TouchableOpacity>
         </View>
-
-        {/* <TouchableOpacity 
-          style={styles.socialButton}
-          onPress={() => handleSocialLogin('Apple')}
-        >
-          <AppleIcon />
-          <Text style={styles.socialButtonText}>Apple</Text>
-        </TouchableOpacity> */}
 
         <TouchableOpacity onPress={() => router.push('/auth/signup')}>
           <Text style={styles.signupText}>
@@ -329,5 +347,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Inter-Regular',
     marginTop: 20,
+  },
+  errorText: {
+    color: '#ff4d4f',
+    fontSize: 13,
+    marginBottom: 8,
+    marginLeft: 4,
   },
 });

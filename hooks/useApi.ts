@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const BASE_URL = 'http://localhost:3000/api';
+//const BASE_URL = 'http://localhost:3000/api';
+const BASE_URL = 'http://192.168.1.9:3000/api';
 
 export function useApi() {
   const [loading, setLoading] = useState(false);

@@ -10,30 +10,9 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ChevronRight, Bell } from 'lucide-react-native';
+import { useHome } from '@/hooks/useHome';
+import { useAllCategories } from '@/hooks/useAllCategories';
 
-const BRIEFING_ITEMS = [
-  {
-    id: 'daily-brief',
-    title: 'Daily Brief',
-    subtitle: 'Daily News',
-    icon: '📰',
-    bgColor: '#1a4c8c',
-  },
-  {
-    id: 'morning-brief',
-    title: 'Morning Brief',
-    subtitle: 'Morning News',
-    icon: '🌅',
-    bgColor: '#2d5a3d',
-  },
-  {
-    id: 'evening-brief',
-    title: 'Evening Brief',
-    subtitle: 'Evening News',
-    icon: '🌆',
-    bgColor: '#8b4513',
-  },
-];
 
 const NEWS_CATEGORIES = [
   {
@@ -71,23 +50,52 @@ const FILTER_TABS = ['All', 'Technology', 'Business', 'Science'];
 export default function HomeScreen() {
   const [selectedFilter, setSelectedFilter] = React.useState('All');
   const router = useRouter();
+  const { main, categories, loading, error } = useHome();
+  const { categories: allCategories, loading: loadingAllCategories, error: errorAllCategories } = useAllCategories();
+
+  console.log(main);
 
   const handleItemPress = (itemId: string) => {
     router.push(`/(tabs)/audio/${itemId}`);
   };
 
-  const renderBriefingItem = (item: typeof BRIEFING_ITEMS[0]) => (
+  const renderBriefingItem = (item: any) => (
     <TouchableOpacity 
       key={item.id} 
       style={styles.briefingItem}
       onPress={() => handleItemPress(item.id)}
     >
-      <View style={[styles.briefingIcon, { backgroundColor: item.bgColor }]}>
-        <Text style={styles.briefingEmoji}>{item.icon}</Text>
+      <View style={styles.briefingIcon}>
+        {item.image ? (
+          <Image source={{ uri: item.image }} style={{ width: 32, height: 32, borderRadius: 8 }} />
+        ) : (
+          <Text style={styles.briefingEmoji}>{item.icon || '📰'}</Text>
+        )}
       </View>
       <View style={styles.briefingContent}>
         <Text style={styles.briefingTitle}>{item.title}</Text>
-        <Text style={styles.briefingSubtitle}>{item.subtitle}</Text>
+        <Text style={styles.briefingSubtitle}>{item.text}</Text>
+      </View>
+      <ChevronRight color="#8E8E93" size={16} />
+    </TouchableOpacity>
+  );
+
+  const renderInterest = (item: any) => (
+    <TouchableOpacity 
+      key={item.id} 
+      style={styles.categoryItem}
+      onPress={() => handleItemPress(item.id)}
+    >
+      <View style={styles.categoryIcon}>
+        {item.image ? (
+          <Image source={{ uri: item.image }} style={{ width: 32, height: 32, borderRadius: 8 }} />
+        ) : (
+          <Text style={styles.categoryEmoji}>{item.icon || '⭐'}</Text>
+        )}
+      </View>
+      <View style={styles.categoryContent}>
+        <Text style={styles.categoryTitle}>{item.title}</Text>
+        <Text style={styles.categorySubtitle}>{item.text}</Text>
       </View>
       <ChevronRight color="#8E8E93" size={16} />
     </TouchableOpacity>
@@ -99,7 +107,7 @@ export default function HomeScreen() {
       style={styles.categoryItem}
       onPress={() => handleItemPress(item.id)}
     >
-      <View style={[styles.categoryIcon, { backgroundColor: item.bgColor }]}>
+      <View style={[styles.categoryIcon, { backgroundColor: item.bgColor }]}> 
         <Text style={styles.categoryEmoji}>{item.icon}</Text>
       </View>
       <View style={styles.categoryContent}>
@@ -109,6 +117,42 @@ export default function HomeScreen() {
       <ChevronRight color="#8E8E93" size={16} />
     </TouchableOpacity>
   );
+
+  const renderNewCategory = (item: any) => (
+    <TouchableOpacity 
+      key={item.id}
+      style={styles.categoryItem}
+      onPress={() => handleItemPress(item.id)}
+    >
+      <View style={styles.categoryIcon}>
+        {item.image ? (
+          <Image source={{ uri: item.image }} style={{ width: 32, height: 32, borderRadius: 8 }} />
+        ) : (
+          <Text style={styles.categoryEmoji}>{item.icon || '🆕'}</Text>
+        )}
+      </View>
+      <View style={styles.categoryContent}>
+        <Text style={styles.categoryTitle}>{item.title}</Text>
+        <Text style={styles.categorySubtitle}>{item.text}</Text>
+      </View>
+      <ChevronRight color="#8E8E93" size={16} />
+    </TouchableOpacity>
+  );
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text style={{ color: '#fff', textAlign: 'center', marginTop: 40 }}>Loading...</Text>
+      </SafeAreaView>
+    );
+  }
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text style={{ color: 'red', textAlign: 'center', marginTop: 40 }}>Failed to load home data</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -148,13 +192,25 @@ export default function HomeScreen() {
         {/* Briefings Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Briefings</Text>
-          {BRIEFING_ITEMS.map(renderBriefingItem)}
+          {main.map(renderBriefingItem)}
         </View>
 
-        {/* News Categories Section */}
+        {/* Interests Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Interests</Text>
+          {categories.map(renderInterest)}
+        </View>
+
+        {/* News Categories Section (from allCategories API) */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>News Categories</Text>
-          {NEWS_CATEGORIES.map(renderNewsCategory)}
+          {loadingAllCategories ? (
+            <Text style={{ color: '#fff', textAlign: 'center', marginTop: 10 }}>Loading...</Text>
+          ) : errorAllCategories ? (
+            <Text style={{ color: 'red', textAlign: 'center', marginTop: 10 }}>Failed to load news categories</Text>
+          ) : (
+            Array.isArray(allCategories) && allCategories.map(renderNewCategory)
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>

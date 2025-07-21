@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSignup } from '@/hooks/useSignup';
-import { HelpCircle } from 'lucide-react-native';
+import { HelpCircle, Eye, EyeOff } from 'lucide-react-native';
 import * as AuthSession from 'expo-auth-session';
 import * as Google from 'expo-auth-session/providers/google';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -49,28 +49,37 @@ export default function SignupScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { signup } = useSignup();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   // Google Auth Request
   const [request, response, promptAsync] = Google.useAuthRequest({
     clientId: SAMPLE_GOOGLE_CLIENT_ID,
   });
 
+  // Validation helpers
+  const validateEmail = (email: string) =>
+    /^\S+@\S+\.\S+$/.test(email);
+  const validatePassword = (password: string) =>
+    password.length >= 6 && /[A-Za-z]/.test(password) && /[0-9]/.test(password);
+
+  const validateFields = () => {
+    const newErrors: { [key: string]: string } = {};
+    if (!email) newErrors.email = 'Email is required';
+    else if (!validateEmail(email)) newErrors.email = 'Invalid email address';
+    if (!password) newErrors.password = 'Password is required';
+    else if (!validatePassword(password)) newErrors.password = 'Password must be at least 6 characters and contain a letter and a number';
+    if (!confirmPassword) newErrors.confirmPassword = 'Confirm your password';
+    else if (password !== confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
+    if (!firstName) newErrors.firstName = 'First name is required';
+    if (!lastName) newErrors.lastName = 'Last name is required';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSignup = async () => {
-    if (!email || !password || !confirmPassword || !firstName || !lastName) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
-      return;
-    }
-
-    if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
-      return;
-    }
-
+    if (!validateFields()) return;
     setIsLoading(true);
     try {
       const result = await signup({ email, password, firstName, lastName });
@@ -83,10 +92,10 @@ export default function SignupScreen() {
         }
         router.replace('/auth/interests');
       } else {
-        Alert.alert('Signup Failed', result.error || 'Please try again');
+        setErrors({ form: result.error || 'Please try again' });
       }
     } catch (error: any) {
-      Alert.alert('Error', error?.message || 'Something went wrong. Please try again.');
+      setErrors({ form: error?.message || 'Something went wrong. Please try again.' });
     } finally {
       setIsLoading(false);
     }
@@ -163,44 +172,67 @@ export default function SignupScreen() {
             placeholder="Email"
             placeholderTextColor="#8E8E93"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={text => { setEmail(text); if (errors.email) { const { email, ...rest } = errors; setErrors(rest); } }}
             keyboardType="email-address"
             autoCapitalize="none"
           />
+          {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
 
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor="#8E8E93"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+          <View style={{ position: 'relative' }}>
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor="#8E8E93"
+              value={password}
+              onChangeText={text => { setPassword(text); if (errors.password) { const { password, ...rest } = errors; setErrors(rest); } }}
+              secureTextEntry={!showPassword}
+            />
+            <TouchableOpacity
+              style={{ position: 'absolute', right: 16, top: 18 }}
+              onPress={() => setShowPassword(v => !v)}
+            >
+              {showPassword ? <EyeOff size={20} color="#8E8E93" /> : <Eye size={20} color="#8E8E93" />}
+            </TouchableOpacity>
+          </View>
+          {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
 
-          <TextInput
-            style={styles.input}
-            placeholder="Confirm Password"
-            placeholderTextColor="#8E8E93"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry
-          />
+          <View style={{ position: 'relative' }}>
+            <TextInput
+              style={styles.input}
+              placeholder="Confirm Password"
+              placeholderTextColor="#8E8E93"
+              value={confirmPassword}
+              onChangeText={text => { setConfirmPassword(text); if (errors.confirmPassword) { const { confirmPassword, ...rest } = errors; setErrors(rest); } }}
+              secureTextEntry={!showConfirmPassword}
+            />
+            <TouchableOpacity
+              style={{ position: 'absolute', right: 16, top: 18 }}
+              onPress={() => setShowConfirmPassword(v => !v)}
+            >
+              {showConfirmPassword ? <EyeOff size={20} color="#8E8E93" /> : <Eye size={20} color="#8E8E93" />}
+            </TouchableOpacity>
+          </View>
+          {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword}</Text>}
 
           <TextInput
             style={styles.input}
             placeholder="First Name"
             placeholderTextColor="#8E8E93"
             value={firstName}
-            onChangeText={setFirstName}
+            onChangeText={text => { setFirstName(text); if (errors.firstName) { const { firstName, ...rest } = errors; setErrors(rest); } }}
           />
+          {errors.firstName && <Text style={styles.errorText}>{errors.firstName}</Text>}
 
           <TextInput
             style={styles.input}
             placeholder="Last Name"
             placeholderTextColor="#8E8E93"
             value={lastName}
-            onChangeText={setLastName}
+            onChangeText={text => { setLastName(text); if (errors.lastName) { const { lastName, ...rest } = errors; setErrors(rest); } }}
           />
+          {errors.lastName && <Text style={styles.errorText}>{errors.lastName}</Text>}
+
+          {errors.form && <Text style={styles.errorText}>{errors.form}</Text>}
 
           <TouchableOpacity 
             style={[styles.signupButton, isLoading && styles.signupButtonDisabled]}
@@ -352,5 +384,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: 'Inter-Bold',
     color: '#000000',
+  },
+  errorText: {
+    color: '#ff4d4f',
+    fontSize: 13,
+    marginBottom: 8,
+    marginLeft: 4,
   },
 });
