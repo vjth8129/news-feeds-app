@@ -7,91 +7,26 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Search, User, ArrowLeft } from 'lucide-react-native';
-
-const EXPLORE_CATEGORIES = [
-  {
-    id: 'true-crime',
-    title: 'True Crime',
-    icon: '🔍',
-    bgColor: 'rgba(139, 115, 85, 0.3)',
-  },
-  {
-    id: 'comedy',
-    title: 'Comedy',
-    icon: '😄',
-    bgColor: 'rgba(212, 165, 116, 0.3)',
-  },
-  {
-    id: 'news',
-    title: 'News',
-    icon: '📰',
-    bgColor: 'rgba(90, 90, 90, 0.3)',
-  },
-  {
-    id: 'sports',
-    title: 'Sports',
-    icon: '⚽',
-    bgColor: 'rgba(212, 165, 116, 0.3)',
-  },
-  {
-    id: 'business',
-    title: 'Business',
-    icon: '💼',
-    bgColor: 'rgba(139, 115, 85, 0.3)',
-  },
-  {
-    id: 'technology',
-    title: 'Technology',
-    icon: '💻',
-    bgColor: 'rgba(122, 132, 113, 0.3)',
-  },
-  {
-    id: 'health',
-    title: 'Health',
-    icon: '🏥',
-    bgColor: 'rgba(122, 132, 113, 0.3)',
-  },
-  {
-    id: 'science',
-    title: 'Science',
-    icon: '🔬',
-    bgColor: 'rgba(122, 132, 113, 0.3)',
-  },
-  {
-    id: 'arts',
-    title: 'Arts',
-    icon: '🎨',
-    bgColor: 'rgba(139, 115, 85, 0.3)',
-  },
-  {
-    id: 'music',
-    title: 'Music',
-    icon: '🎵',
-    bgColor: 'rgba(212, 165, 116, 0.3)',
-  },
-  {
-    id: 'education',
-    title: 'Education',
-    icon: '📚',
-    bgColor: 'rgba(122, 132, 113, 0.3)',
-  },
-  {
-    id: 'kids-family',
-    title: 'Kids & Family',
-    icon: '👨‍👩‍👧‍👦',
-    bgColor: 'rgba(212, 165, 116, 0.3)',
-  },
-];
+import { useAllCategories } from '@/hooks/useAllCategories';
 
 export default function ExploreScreen() {
   const [searchQuery, setSearchQuery] = React.useState('');
   const router = useRouter();
+  const { categories, loading, error } = useAllCategories();
+
+  // Debug logging
+  React.useEffect(() => {
+    console.log('Explore - categories:', categories);
+    console.log('Explore - loading:', loading);
+    console.log('Explore - error:', error);
+  }, [categories, loading, error]);
 
   const handleCategoryPress = (categoryId: string) => {
-    console.log(`Selected category: ${categoryId}`);
+    router.push(`/(tabs)/audio/${categoryId}`);
   };
 
   const handleProfilePress = () => {
@@ -101,6 +36,14 @@ export default function ExploreScreen() {
   const handleBackPress = () => {
     router.back();
   };
+
+  // Filter categories based on search query
+  const filteredCategories = Array.isArray(categories) 
+    ? categories.filter(category => 
+        category.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        category.name?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : [];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -128,18 +71,34 @@ export default function ExploreScreen() {
         </View>
 
         {/* Categories Grid */}
-        <View style={styles.categoriesGrid}>
-          {EXPLORE_CATEGORIES.map((category) => (
-            <TouchableOpacity
-              key={category.id}
-              style={[styles.categoryCard, { backgroundColor: category.bgColor }]}
-              onPress={() => handleCategoryPress(category.id)}
-            >
-              <Text style={styles.categoryIcon}>{category.icon}</Text>
-              <Text style={styles.categoryTitle}>{category.title}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        {loading ? (
+          <Text style={styles.loadingText}>Loading categories...</Text>
+        ) : error ? (
+          <Text style={styles.errorText}>Failed to load categories</Text>
+        ) : (
+          <View style={styles.grid}>
+            {filteredCategories.map((category: any) => (
+              <TouchableOpacity
+                key={category.id || category._id}
+                style={styles.categoryCard}
+                onPress={() => handleCategoryPress(category.id || category._id)}
+              >
+                <Image 
+                  source={{ 
+                    uri: category.image || category.imageUri || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=300&h=200&fit=crop&crop=center'
+                  }}
+                  style={styles.cardImage}
+                  defaultSource={require('@/assets/images/icon.png')}
+                  onError={() => console.log('Failed to load explore image:', category.image || category.imageUri)}
+                  resizeMode="cover"
+                />
+                <View style={styles.cardOverlay}>
+                  <Text style={styles.cardTitle}>{category.title || category.name}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -203,32 +162,51 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     paddingVertical: 16,
   },
-  categoriesGrid: {
+  grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    gap: 8,
   },
   categoryCard: {
-    width: '47%',
-    aspectRatio: 1.5,
+    width: '48%',
+    height: 120,
     borderRadius: 16,
-    padding: 16,
-    justifyContent: 'space-between',
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    marginBottom: 16,
+    overflow: 'hidden',
+    position: 'relative',
   },
-  categoryIcon: {
-    fontSize: 28,
-    alignSelf: 'flex-start',
+  cardImage: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
   },
-  categoryTitle: {
+  cardOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'flex-end',
+    padding: 12,
+  },
+  cardTitle: {
+    color: '#FFFFFF',
     fontSize: 16,
     fontFamily: 'Inter-SemiBold',
-    color: '#FFFFFF',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
+  },
+  loadingText: {
+    color: '#fff',
+    textAlign: 'center',
+    marginTop: 40,
+    fontSize: 16,
+  },
+  errorText: {
+    color: 'red',
+    textAlign: 'center',
+    marginTop: 40,
+    fontSize: 16,
   },
 });

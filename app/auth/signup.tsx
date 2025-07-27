@@ -15,6 +15,7 @@ import { HelpCircle, Eye, EyeOff } from 'lucide-react-native';
 import * as AuthSession from 'expo-auth-session';
 import * as Google from 'expo-auth-session/providers/google';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Toast from 'react-native-toast-message';
 
 const SAMPLE_GOOGLE_CLIENT_ID = '616886846838-8lcjiru22ps0u01vph9hpbfbcvilq3nn.apps.googleusercontent.com'; // Sample client ID
 
@@ -82,20 +83,43 @@ export default function SignupScreen() {
     if (!validateFields()) return;
     setIsLoading(true);
     try {
-      const result = await signup({ email, password, firstName, lastName });
-      if (result.data && result.data.token) {
+      const result = await signup({
+        email,
+        password,
+        firstName,
+        lastName,
+      });
+      if (result.data?.token) {
         await AsyncStorage.setItem('token', result.data.token);
-        // Parse token to get userId
         const decoded: DecodedToken = parseJwt(result.data.token);
-        if (decoded && decoded.email) {
-          await AsyncStorage.setItem('userId', decoded.email);
+        if (decoded && decoded.userId) {
+          await AsyncStorage.setItem('userId', decoded.userId);
         }
-        router.replace('/auth/interests');
+        Toast.show({
+          type: 'success',
+          text1: 'Signup Successful',
+          text2: 'Account created successfully!',
+          position: 'top',
+          visibilityTime: 3000,
+        });
+        router.push('/auth/interests');
       } else {
-        setErrors({ form: result.error || 'Please try again' });
+        Toast.show({
+          type: 'error',
+          text1: 'Signup Failed',
+          text2: result.error || 'Failed to create account',
+          position: 'top',
+          visibilityTime: 4000,
+        });
       }
     } catch (error: any) {
-      setErrors({ form: error?.message || 'Something went wrong. Please try again.' });
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error?.message || 'Something went wrong. Please try again.',
+        position: 'top',
+        visibilityTime: 4000,
+      });
     } finally {
       setIsLoading(false);
     }

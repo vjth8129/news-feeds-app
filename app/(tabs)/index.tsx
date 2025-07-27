@@ -11,39 +11,10 @@ import {
 import { useRouter } from 'expo-router';
 import { ChevronRight, Bell } from 'lucide-react-native';
 import { useHome } from '@/hooks/useHome';
-import { useAllCategories } from '@/hooks/useAllCategories';
+import { useCategories } from '@/hooks/useCategories';
 
 
-const NEWS_CATEGORIES = [
-  {
-    id: 'tech',
-    title: 'The Latest in Tech',
-    subtitle: 'Tech News',
-    icon: '💻',
-    bgColor: '#1a5f7a',
-  },
-  {
-    id: 'market',
-    title: 'Market Trends',
-    subtitle: 'Business Insights',
-    icon: '📈',
-    bgColor: '#4a5d23',
-  },
-  {
-    id: 'science',
-    title: 'Breakthroughs in Science',
-    subtitle: 'Science Discoveries',
-    icon: '🔬',
-    bgColor: '#1e3a8a',
-  },
-  {
-    id: 'politics',
-    title: 'Inside Politics',
-    subtitle: 'Political Analysis',
-    icon: '🏛️',
-    bgColor: '#374151',
-  },
-];
+
 
 const FILTER_TABS = ['All', 'Technology', 'Business', 'Science'];
 
@@ -51,7 +22,7 @@ export default function HomeScreen() {
   const [selectedFilter, setSelectedFilter] = React.useState('All');
   const router = useRouter();
   const { main, categories, loading, error } = useHome();
-  const { categories: allCategories, loading: loadingAllCategories, error: errorAllCategories } = useAllCategories();
+  const { categories: allCategories, loading: loadingAllCategories, error: errorAllCategories } = useCategories();
 
   console.log(main);
 
@@ -66,8 +37,13 @@ export default function HomeScreen() {
       onPress={() => handleItemPress(item.id)}
     >
       <View style={styles.briefingIcon}>
-        {item.image ? (
-          <Image source={{ uri: item.image }} style={{ width: 32, height: 32, borderRadius: 8 }} />
+        {(item.image || item.imageUri) ? (
+          <Image 
+            source={{ uri: item.image || item.imageUri }} 
+            style={{ width: 32, height: 32, borderRadius: 8 }}
+            defaultSource={require('@/assets/images/icon.png')}
+            onError={() => console.log('Failed to load briefing image:', item.image || item.imageUri)}
+          />
         ) : (
           <Text style={styles.briefingEmoji}>{item.icon || '📰'}</Text>
         )}
@@ -87,8 +63,13 @@ export default function HomeScreen() {
       onPress={() => handleItemPress(item.id)}
     >
       <View style={styles.categoryIcon}>
-        {item.image ? (
-          <Image source={{ uri: item.image }} style={{ width: 32, height: 32, borderRadius: 8 }} />
+        {(item.image || item.imageUri) ? (
+          <Image 
+            source={{ uri: item.image || item.imageUri }} 
+            style={{ width: 32, height: 32, borderRadius: 8 }}
+            defaultSource={require('@/assets/images/icon.png')}
+            onError={() => console.log('Failed to load interest image:', item.image || item.imageUri)}
+          />
         ) : (
           <Text style={styles.categoryEmoji}>{item.icon || '⭐'}</Text>
         )}
@@ -101,22 +82,6 @@ export default function HomeScreen() {
     </TouchableOpacity>
   );
 
-  const renderNewsCategory = (item: typeof NEWS_CATEGORIES[0]) => (
-    <TouchableOpacity 
-      key={item.id} 
-      style={styles.categoryItem}
-      onPress={() => handleItemPress(item.id)}
-    >
-      <View style={[styles.categoryIcon, { backgroundColor: item.bgColor }]}> 
-        <Text style={styles.categoryEmoji}>{item.icon}</Text>
-      </View>
-      <View style={styles.categoryContent}>
-        <Text style={styles.categoryTitle}>{item.title}</Text>
-        <Text style={styles.categorySubtitle}>{item.subtitle}</Text>
-      </View>
-      <ChevronRight color="#8E8E93" size={16} />
-    </TouchableOpacity>
-  );
 
   const renderNewCategory = (item: any) => (
     <TouchableOpacity 
@@ -125,8 +90,13 @@ export default function HomeScreen() {
       onPress={() => handleItemPress(item.id)}
     >
       <View style={styles.categoryIcon}>
-        {item.image ? (
-          <Image source={{ uri: item.image }} style={{ width: 32, height: 32, borderRadius: 8 }} />
+        {(item.image || item.imageUri) ? (
+          <Image 
+            source={{ uri: item.image || item.imageUri }} 
+            style={{ width: 32, height: 32, borderRadius: 8 }}
+            defaultSource={require('@/assets/images/icon.png')}
+            onError={() => console.log('Failed to load category image:', item.image || item.imageUri)}
+          />
         ) : (
           <Text style={styles.categoryEmoji}>{item.icon || '🆕'}</Text>
         )}
@@ -209,7 +179,18 @@ export default function HomeScreen() {
           ) : errorAllCategories ? (
             <Text style={{ color: 'red', textAlign: 'center', marginTop: 10 }}>Failed to load news categories</Text>
           ) : (
-            Array.isArray(allCategories) && allCategories.map(renderNewCategory)
+            <>
+              {Array.isArray(allCategories) && allCategories.slice(0, 10).map(renderNewCategory)}
+              {Array.isArray(allCategories) && allCategories.length > 10 && (
+                <TouchableOpacity 
+                  style={styles.showMoreButton}
+                  onPress={() => router.push('/(tabs)/explore')}
+                >
+                  <Text style={styles.showMoreText}>Show More Categories</Text>
+                  <ChevronRight color="#4285f4" size={16} />
+                </TouchableOpacity>
+              )}
+            </>
           )}
         </View>
       </ScrollView>
@@ -341,5 +322,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Inter-Regular',
     color: '#8E8E93',
+  },
+  showMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#2a2f3e',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#3a3f4e',
+  },
+  showMoreText: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#4285f4',
+    marginRight: 8,
   },
 });

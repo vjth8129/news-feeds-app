@@ -16,6 +16,13 @@ import { CircleHelp as HelpCircle, Eye, EyeOff } from 'lucide-react-native';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Toast from 'react-native-toast-message';
+
+// Add a type for the decoded token
+interface DecodedToken {
+  userId?: string;
+  [key: string]: any;
+}
 
 // For proper Google auth session handling
 WebBrowser.maybeCompleteAuthSession();
@@ -97,12 +104,31 @@ export default function LoginScreen() {
         if (decoded?.userId) {
           await AsyncStorage.setItem('userId', decoded.userId);
         }
+        Toast.show({
+          type: 'success',
+          text1: 'Login Successful',
+          text2: 'Welcome back!',
+          position: 'top',
+          visibilityTime: 3000,
+        });
         router.replace('/(tabs)');
       } else {
-        setErrors({ form: result.error || 'Invalid email or password' });
+        Toast.show({
+          type: 'error',
+          text1: 'Login Failed',
+          text2: result.error || 'Invalid email or password',
+          position: 'top',
+          visibilityTime: 4000,
+        });
       }
     } catch (error: any) {
-      setErrors({ form: error?.message || 'Something went wrong. Please try again.' });
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error?.message || 'Something went wrong. Please try again.',
+        position: 'top',
+        visibilityTime: 4000,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -135,16 +161,35 @@ export default function LoginScreen() {
           });
           if (result.data?.token) {
             await AsyncStorage.setItem('token', result.data.token);
-            const decoded = parseJwt(result.data.token);
+            const decoded: DecodedToken = parseJwt(result.data.token);
             if (decoded?.userId) {
               await AsyncStorage.setItem('userId', decoded.userId);
             }
+            Toast.show({
+              type: 'success',
+              text1: 'Google Login Successful',
+              text2: 'Welcome!',
+              position: 'top',
+              visibilityTime: 3000,
+            });
             router.replace('/(tabs)');
           } else {
-            Alert.alert('Google Login Failed', result.error || 'Could not login with Google');
+            Toast.show({
+              type: 'error',
+              text1: 'Google Login Failed',
+              text2: result.error || 'Could not login with Google',
+              position: 'top',
+              visibilityTime: 4000,
+            });
           }
         } catch (error: any) {
-          Alert.alert('Google Login Error', error?.message || 'Unknown error');
+          Toast.show({
+            type: 'error',
+            text1: 'Google Login Error',
+            text2: error?.message || 'Unknown error',
+            position: 'top',
+            visibilityTime: 4000,
+          });
         }
       })();
     }

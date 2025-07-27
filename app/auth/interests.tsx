@@ -13,6 +13,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useCategories } from '@/hooks/useCategories';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUserCategoryPreference } from '@/hooks/useUserCategoryPreference';
+import Toast from 'react-native-toast-message';
 
 export default function InterestsScreen() {
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
@@ -36,7 +37,13 @@ export default function InterestsScreen() {
     try {
       const userId = await AsyncStorage.getItem('userId');
       if (!userId) {
-        alert('User not found in session. Please sign up again.');
+        Toast.show({
+          type: 'error',
+          text1: 'Session Error',
+          text2: 'User not found in session. Please sign up again.',
+          position: 'top',
+          visibilityTime: 4000,
+        });
         return;
       }
       // Get the full selected category objects
@@ -46,12 +53,31 @@ export default function InterestsScreen() {
       const result = await savePreferences(userId, selectedCategoryObjects);
       if (result && 'data' in result && result.data) {
         setInterests(selectedInterests);
+        Toast.show({
+          type: 'success',
+          text1: 'Interests Updated',
+          text2: 'Your interests have been saved successfully!',
+          position: 'top',
+          visibilityTime: 3000,
+        });
         router.replace('/(tabs)');
       } else {
-        alert(result.error || 'Failed to save preferences');
+        Toast.show({
+          type: 'error',
+          text1: 'Save Failed',
+          text2: result.error || 'Failed to save preferences',
+          position: 'top',
+          visibilityTime: 4000,
+        });
       }
     } catch (e) {
-      alert('Something went wrong.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Something went wrong while saving your interests.',
+        position: 'top',
+        visibilityTime: 4000,
+      });
     }
   };
 
@@ -111,8 +137,13 @@ export default function InterestsScreen() {
               onPress={() => toggleInterest(category.id || category._id)}
             >
               <Image 
-                source={{ uri: 'https://images.pexels.com/photos/325229/pexels-photo-325229.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop' }}
+                source={{ 
+                  uri: category.image || category.imageUri || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=300&h=200&fit=crop&crop=center' 
+                }}
                 style={styles.cardImage}
+                defaultSource={require('@/assets/images/icon.png')}
+                onError={() => console.log('Failed to load interest image:', category.image || category.imageUri)}
+                resizeMode="cover"
               />
               <View 
                 style={styles.cardOverlay}
